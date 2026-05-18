@@ -1,83 +1,135 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mi Biblioteca Personal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon">📚</span>
-        <div>
-          <h1>Mi Biblioteca Personal</h1>
-          <p class="subtitle">Gestiona tu colección de libros</p>
-        </div>
+  <!-- SIDEBAR IZQUIERDA — Nav -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">📚</span>
+      <div>
+        <h1>Biblioteca</h1>
+        <span>Personal</span>
       </div>
-      <nav class="nav-pills">
-        <button class="pill active" data-view="estantes">Estantes</button>
-        <button class="pill" data-view="lista">Lista</button>
-        <button class="pill" data-view="stats">Estadísticas</button>
-      </nav>
-      <button class="btn-add" id="btnOpenModal">+ Agregar libro</button>
     </div>
-  </header>
 
-  <!-- FILTROS -->
-  <section class="filtros-bar">
-    <div class="filtros-inner">
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="estantes">
+        <span class="nav-icon">🏛️</span>
+        <span>Estantes</span>
+      </button>
+      <button class="nav-item" data-view="lista">
+        <span class="nav-icon">📋</span>
+        <span>Lista</span>
+      </button>
+      <button class="nav-item" data-view="stats">
+        <span class="nav-icon">📊</span>
+        <span>Estadísticas</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-filters">
+      <p class="filter-label">Filtrar por estado</p>
+      <button class="filter-btn active" data-estado="">
+        <span class="filter-dot dot-all"></span>Todos
+        <span class="filter-count" id="countAll">0</span>
+      </button>
+      <button class="filter-btn" data-estado="leido">
+        <span class="filter-dot dot-leido"></span>Leído
+        <span class="filter-count" id="countLeido">0</span>
+      </button>
+      <button class="filter-btn" data-estado="leyendo">
+        <span class="filter-dot dot-leyendo"></span>Leyendo
+        <span class="filter-count" id="countLeyendo">0</span>
+      </button>
+      <button class="filter-btn" data-estado="pendiente">
+        <span class="filter-dot dot-pendiente"></span>Pendiente
+        <span class="filter-count" id="countPendiente">0</span>
+      </button>
+    </div>
+
+    <button class="btn-add-sidebar" id="btnOpenModal">
+      <span>＋</span> Agregar libro
+    </button>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="main-wrapper">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
       <div class="search-wrap">
-        <input id="searchInput" type="text" placeholder="Buscar por título o autor…" autocomplete="off"/>
-        <span class="search-icon">🔍</span>
+        <svg class="search-svg" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input id="searchInput" type="text" placeholder="Buscar título, autor o género…" autocomplete="off"/>
+        <kbd id="searchClear" class="search-clear hidden">✕</kbd>
       </div>
-      <div class="filter-chips">
-        <button class="chip active" data-estado="">Todos</button>
-        <button class="chip" data-estado="pendiente">📌 Pendiente</button>
-        <button class="chip" data-estado="leyendo">📖 Leyendo</button>
-        <button class="chip" data-estado="leido">✅ Leído</button>
+      <div class="topbar-info" id="topbarInfo">— libros</div>
+    </header>
+
+    <!-- VISTAS -->
+    <main class="content">
+
+      <!-- Vista Estantes -->
+      <section id="view-estantes" class="view active">
+        <div class="shelf-room" id="shelfRoom"></div>
+      </section>
+
+      <!-- Vista Lista -->
+      <section id="view-lista" class="view">
+        <div class="list-grid" id="listGrid"></div>
+      </section>
+
+      <!-- Vista Stats -->
+      <section id="view-stats" class="view">
+        <div class="stats-grid" id="statsGrid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- PANEL DETALLE LIBRO (slide-in desde la derecha) -->
+  <aside class="detail-panel" id="detailPanel">
+    <button class="detail-close" id="detailClose">✕</button>
+    <div class="detail-cover" id="detailCover">
+      <span class="detail-cover-title" id="detailCoverTitle"></span>
+    </div>
+    <div class="detail-body">
+      <h2 class="detail-title" id="detailTitle"></h2>
+      <p class="detail-author" id="detailAuthor"></p>
+      <div class="detail-meta" id="detailMeta"></div>
+
+      <div class="detail-estado-wrap">
+        <p class="detail-section-label">Estado de lectura</p>
+        <div class="detail-estado-btns" id="detailEstadoBtns"></div>
+      </div>
+
+      <div class="detail-rating-wrap">
+        <p class="detail-section-label">Calificación</p>
+        <div class="detail-stars" id="detailStars"></div>
+      </div>
+
+      <div class="detail-notes" id="detailNotesWrap">
+        <p class="detail-section-label">Notas</p>
+        <p class="detail-notes-text" id="detailNotesText"></p>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn-detail-edit" id="detailEditBtn">✏️ Editar libro</button>
+        <button class="btn-detail-delete" id="detailDeleteBtn">🗑️ Eliminar</button>
       </div>
     </div>
-  </section>
-
-  <!-- VISTAS -->
-  <main class="main-content">
-
-    <!-- Vista Estantes -->
-    <section id="view-estantes" class="view active">
-      <div class="shelf-room" id="shelfRoom">
-        <div class="shelf-loading">Cargando tu biblioteca…</div>
-      </div>
-    </section>
-
-    <!-- Vista Lista -->
-    <section id="view-lista" class="view">
-      <div class="table-wrap">
-        <table class="books-table">
-          <thead>
-            <tr>
-              <th>Título</th><th>Autor</th><th>Género</th>
-              <th>Año</th><th>Estado</th><th>★</th><th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Vista Stats -->
-    <section id="view-stats" class="view">
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-loading">Cargando estadísticas…</div>
-      </div>
-    </section>
-
-  </main>
+  </aside>
+  <div class="detail-overlay" id="detailOverlay"></div>
 
   <!-- MODAL AGREGAR / EDITAR -->
   <div class="modal-overlay" id="modalOverlay">
@@ -88,43 +140,42 @@
       </div>
       <form id="bookForm" class="modal-form">
         <input type="hidden" id="bookId"/>
-        <div class="form-row">
-          <div class="form-group full">
-            <label>Título *</label>
-            <input type="text" id="fTitulo" required placeholder="Ej: Cien años de soledad"/>
-          </div>
+
+        <div class="field">
+          <input type="text" id="fTitulo" required placeholder=" "/>
+          <label>Título *</label>
         </div>
         <div class="form-row">
-          <div class="form-group">
+          <div class="field">
+            <input type="text" id="fAutor" required placeholder=" "/>
             <label>Autor *</label>
-            <input type="text" id="fAutor" required placeholder="Ej: Gabriel García Márquez"/>
           </div>
-          <div class="form-group">
+          <div class="field">
+            <input type="text" id="fGenero" required placeholder=" "/>
             <label>Género *</label>
-            <input type="text" id="fGenero" required placeholder="Ej: Realismo mágico"/>
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Año de publicación</label>
-            <input type="number" id="fAnio" min="0" max="2100" placeholder="Ej: 1967"/>
+          <div class="field">
+            <input type="number" id="fAnio" min="0" max="2100" placeholder=" "/>
+            <label>Año</label>
           </div>
-          <div class="form-group">
+          <div class="field">
+            <input type="number" id="fPaginas" min="1" placeholder=" "/>
             <label>Páginas</label>
-            <input type="number" id="fPaginas" min="1" placeholder="Ej: 471"/>
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Estado</label>
+          <div class="field field-select">
             <select id="fEstado">
               <option value="pendiente">📌 Pendiente</option>
               <option value="leyendo">📖 Leyendo</option>
               <option value="leido">✅ Leído</option>
             </select>
+            <label>Estado</label>
           </div>
-          <div class="form-group">
-            <label>Calificación (1-5)</label>
+          <div class="field field-stars">
+            <label class="label-static">Calificación</label>
             <div class="star-input" id="starInput">
               <span class="star" data-val="1">★</span>
               <span class="star" data-val="2">★</span>
@@ -135,12 +186,11 @@
             <input type="hidden" id="fCalificacion"/>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group full">
-            <label>Notas personales</label>
-            <textarea id="fNotas" rows="3" placeholder="Apuntes, opinión, cita favorita…"></textarea>
-          </div>
+        <div class="field">
+          <textarea id="fNotas" rows="3" placeholder=" "></textarea>
+          <label>Notas personales</label>
         </div>
+
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="btnCancel">Cancelar</button>
           <button type="submit" class="btn-save">Guardar libro</button>
