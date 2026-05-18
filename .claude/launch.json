@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "biblioteca-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "cwd": "/Users/isaias/Downloads/api-biblioteca-personal",
+      "port": 3000
+    }
+  ]
+}
