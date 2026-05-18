@@ -1,6 +1,8 @@
 # API Biblioteca Personal
 
-API REST construida con **Node.js + Express + SQLite** para gestionar una colección personal de libros.
+API REST construida con **Node.js + Express + SQLite** para gestionar una colección personal de libros, con frontend de tema biblioteca.
+
+🌐 **Demo en vivo:** [api-biblioteca-personal-six.vercel.app](https://api-biblioteca-personal-six.vercel.app)
 
 ## Stack técnico
 
@@ -9,16 +11,16 @@ API REST construida con **Node.js + Express + SQLite** para gestionar una colecc
 | Runtime | Node.js 18+ |
 | Framework | Express 5 |
 | Base de datos | SQLite (better-sqlite3) |
-| Deploy | Railway |
+| Frontend | HTML + CSS + JS (vanilla) |
+| Deploy | Vercel |
 
 ## Instalación local
 
 ```bash
-git clone https://github.com/TU_USUARIO/api-biblioteca-personal.git
+git clone https://github.com/isaias-sanchez/api-biblioteca-personal.git
 cd api-biblioteca-personal
 npm install
-cp .env.example .env
-npm run dev
+npm start
 ```
 
 La API quedará disponible en `http://localhost:3000`.
@@ -67,36 +69,36 @@ La API quedará disponible en `http://localhost:3000`.
 
 ### Crear un libro
 ```bash
-curl -X POST http://localhost:3000/libros \
+curl -X POST https://api-biblioteca-personal-six.vercel.app/libros \
   -H "Content-Type: application/json" \
   -d '{"titulo":"El Principito","autor":"Antoine de Saint-Exupéry","genero":"Fábula","anio":1943,"estado":"leido","calificacion":5}'
 ```
 
 ### Buscar libros
 ```bash
-curl "http://localhost:3000/libros/buscar?q=garcia"
+curl "https://api-biblioteca-personal-six.vercel.app/libros/buscar?q=garcia"
 ```
 
 ### Ver estadísticas
 ```bash
-curl http://localhost:3000/stats
+curl https://api-biblioteca-personal-six.vercel.app/stats
 ```
 
 ### Cambiar estado de lectura
 ```bash
-curl -X PATCH http://localhost:3000/libros/1/estado \
+curl -X PATCH https://api-biblioteca-personal-six.vercel.app/libros/1/estado \
   -H "Content-Type: application/json" \
   -d '{"estado":"leyendo"}'
 ```
-
-## Deploy
-
-Desplegado en Railway: [Ver API en producción](https://TU_URL.railway.app)
 
 ## Estructura del proyecto
 
 ```
 api-biblioteca-personal/
+├── public/
+│   ├── index.html      # Frontend tema biblioteca
+│   ├── style.css       # Estilos (sidebar + panel deslizante)
+│   └── app.js          # Lógica del frontend
 ├── src/
 │   ├── app.js          # Configuración de Express
 │   ├── database.js     # Conexión y schema SQLite
@@ -104,6 +106,7 @@ api-biblioteca-personal/
 │       ├── libros.js   # CRUD libros
 │       └── stats.js    # Estadísticas
 ├── index.js            # Punto de entrada
-├── package.json
-└── .env.example
+├── seed.js             # Datos de ejemplo (9 libros)
+├── vercel.json         # Configuración de deploy
+└── package.json
 ```
