@@ -1,131 +1,54 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database');
+const { validate, idSchema, idParamsSchema, libroCreateSchema, libroUpdateSchema, libroEstadoSchema, searchSchema, paginationSchema } = require('../schemas');
+const { listar, buscar, obtenerPorId, crear, actualizar, cambiarEstado, eliminar } = require('../services');
 
-// GET /libros — listar todos (con filtros opcionales por query)
-router.get('/', (req, res) => {
-  const { estado, genero } = req.query;
-  let query = 'SELECT * FROM libros WHERE 1=1';
-  const params = [];
-
-  if (estado) {
-    query += ' AND estado = ?';
-    params.push(estado);
-  }
-  if (genero) {
-    query += ' AND genero LIKE ?';
-    params.push(`%${genero}%`);
-  }
-
-  query += ' ORDER BY creado_en DESC';
-
-  const libros = db.prepare(query).all(...params);
-  res.json({ total: libros.length, libros });
+// GET /libros — listar con filtros y paginación
+router.get('/', validate(paginationSchema, 'query'), (req, res) => {
+  const { estado, genero, page = 1, limit = 20 } = req.query;
+  const result = listar({ estado: estado || undefined, genero: genero || undefined, page, limit });
+  res.json(result);
 });
 
-// GET /libros/buscar?q= — buscar por título o autor (tolerante a acentos)
-router.get('/buscar', (req, res) => {
+// GET /libros/buscar?q= — búsqueda
+router.get('/buscar', validate(searchSchema, 'query'), (req, res) => {
   const { q } = req.query;
-  if (!q || q.trim() === '') {
-    return res.status(400).json({ error: 'El parámetro q es requerido' });
-  }
-  const normalize = (str) =>
-    str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-
-  const term = q.trim();
-  const termNorm = normalize(term);
-
-  const todos = db.prepare('SELECT * FROM libros ORDER BY titulo').all();
-  const libros = todos.filter((l) => {
-    const tituloNorm = normalize(l.titulo);
-    const autorNorm = normalize(l.autor);
-    return tituloNorm.includes(termNorm) || autorNorm.includes(termNorm);
-  });
-  res.json({ total: libros.length, libros });
+  const result = buscar(q);
+  res.json(result);
 });
 
-// GET /libros/:id — obtener uno
-router.get('/:id', (req, res) => {
-  const libro = db.prepare('SELECT * FROM libros WHERE id = ?').get(req.params.id);
+// GET /libros/:id — obtener por ID
+router.get('/:id', validate(idParamsSchema, 'params'), (req, res) => {
+  const libro = obtenerPorId(req.params.id);
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
   res.json(libro);
 });
 
 // POST /libros — crear
-router.post('/', (req, res) => {
-  const { titulo, autor, genero, anio, paginas, estado, calificacion, notas } = req.body;
-
-  if (!titulo || !autor || !genero) {
-    return res.status(400).json({ error: 'titulo, autor y genero son requeridos' });
-  }
-
-  const estadoFinal = estado || 'pendiente';
-  const estadosValidos = ['pendiente', 'leyendo', 'leido'];
-  if (!estadosValidos.includes(estadoFinal)) {
-    return res.status(400).json({ error: `estado debe ser: ${estadosValidos.join(', ')}` });
-  }
-
-  const result = db.prepare(`
-    INSERT INTO libros (titulo, autor, genero, anio, paginas, estado, calificacion, notas)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(titulo, autor, genero, anio || null, paginas || null, estadoFinal, calificacion || null, notas || null);
-
-  const libro = db.prepare('SELECT * FROM libros WHERE id = ?').get(result.lastInsertRowid);
+router.post('/', validate(libroCreateSchema), (req, res) => {
+  const libro = crear(req.body);
   res.status(201).json(libro);
 });
 
 // PUT /libros/:id — actualizar completo
-router.put('/:id', (req, res) => {
-  const libro = db.prepare('SELECT * FROM libros WHERE id = ?').get(req.params.id);
+router.put('/:id', validate(idParamsSchema, 'params'), validate(libroUpdateSchema), (req, res) => {
+  const libro = actualizar(req.params.id, req.body);
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
-
-  const { titulo, autor, genero, anio, paginas, estado, calificacion, notas } = req.body;
-
-  if (!titulo || !autor || !genero) {
-    return res.status(400).json({ error: 'titulo, autor y genero son requeridos' });
-  }
-
-  const estadosValidos = ['pendiente', 'leyendo', 'leido'];
-  if (estado && !estadosValidos.includes(estado)) {
-    return res.status(400).json({ error: `estado debe ser: ${estadosValidos.join(', ')}` });
-  }
-
-  db.prepare(`
-    UPDATE libros SET
-      titulo = ?, autor = ?, genero = ?, anio = ?, paginas = ?,
-      estado = ?, calificacion = ?, notas = ?,
-      actualizado_en = datetime('now')
-    WHERE id = ?
-  `).run(titulo, autor, genero, anio || null, paginas || null,
-         estado || libro.estado, calificacion || null, notas || null, req.params.id);
-
-  res.json(db.prepare('SELECT * FROM libros WHERE id = ?').get(req.params.id));
+  res.json(libro);
 });
 
-// PATCH /libros/:id/estado — cambiar solo el estado de lectura
-router.patch('/:id/estado', (req, res) => {
-  const libro = db.prepare('SELECT * FROM libros WHERE id = ?').get(req.params.id);
+// PATCH /libros/:id/estado — cambiar estado
+router.patch('/:id/estado', validate(idParamsSchema, 'params'), validate(libroEstadoSchema), (req, res) => {
+  const libro = cambiarEstado(req.params.id, req.body.estado);
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
-
-  const { estado } = req.body;
-  const estadosValidos = ['pendiente', 'leyendo', 'leido'];
-  if (!estado || !estadosValidos.includes(estado)) {
-    return res.status(400).json({ error: `estado debe ser: ${estadosValidos.join(', ')}` });
-  }
-
-  db.prepare(`UPDATE libros SET estado = ?, actualizado_en = datetime('now') WHERE id = ?`)
-    .run(estado, req.params.id);
-
-  res.json(db.prepare('SELECT * FROM libros WHERE id = ?').get(req.params.id));
+  res.json(libro);
 });
 
 // DELETE /libros/:id — eliminar
-router.delete('/:id', (req, res) => {
-  const libro = db.prepare('SELECT * FROM libros WHERE id = ?').get(req.params.id);
-  if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
-
-  db.prepare('DELETE FROM libros WHERE id = ?').run(req.params.id);
-  res.json({ mensaje: `Libro "${libro.titulo}" eliminado correctamente` });
+router.delete('/:id', validate(idParamsSchema, 'params'), (req, res) => {
+  const result = eliminar(req.params.id);
+  if (!result) return res.status(404).json({ error: 'Libro no encontrado' });
+  res.json(result);
 });
 
 module.exports = router;

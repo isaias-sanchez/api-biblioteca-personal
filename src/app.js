@@ -1,18 +1,32 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
+const { httpLogger } = require('./logger');
 const librosRouter = require('./routes/libros');
 const statsRouter = require('./routes/stats');
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Seguridad y performance
+app.use(helmet());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
 
+// Logging HTTP requests
+httpLogger(app);
+
+app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(cors());
 app.use(express.json());
 
-// Ruta raíz — info de la API
+// Ruta raíz — info de la API (sin cambios de contenido)
 app.get('/', (req, res) => {
   res.json({
     nombre: 'API Biblioteca Personal',
@@ -20,7 +34,7 @@ app.get('/', (req, res) => {
     descripcion: 'API REST para gestionar tu colección personal de libros',
     endpoints: {
       libros: {
-        'GET    /libros':              'Listar todos los libros (filtros: ?estado=&genero=)',
+        'GET    /libros':              'Listar todos los libros (filtros: ?estado=&genero=&page=&limit=)',
         'GET    /libros/buscar?q=':    'Buscar por título o autor',
         'GET    /libros/:id':          'Obtener un libro por ID',
         'POST   /libros':              'Crear un libro',

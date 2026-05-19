@@ -1,0 +1,217 @@
+openapi: 3.0.0
+info:
+  title: API Biblioteca Personal
+  version: 1.0.0
+  description: API REST para gestionar una colección personal de libros
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api-biblioteca-personal-six.vercel.app
+    description: Production
+paths:
+  /libros:
+    get:
+      summary: Listar todos los libros
+      parameters:
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [pendiente, leyendo, leido]
+            description: Filtrar por estado de lectura
+        - name: genero
+          in: query
+          schema:
+            type: string
+            description: Filtrar por género
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Lista de libros
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  libros:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/libro'
+                  paginacion:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total_paginas:
+                        type: integer
+                  total:
+                    type: integer
+    post:
+      summary: Crear un nuevo libro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/libroCreate'
+      responses:
+        '201':
+          description: Libro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/libro'
+        '400':
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /libros/{id}:
+    get:
+      summary: Obtener un libro por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Libro encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/libro'
+        '404':
+          description: Libro no encontrado
+  /libros/buscar:
+    get:
+      summary: Buscar libros por título o autor
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resultados de búsqueda
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  libros:
+                    type: array
+                  total:
+                    type: integer
+  /libros/{id}/estado:
+    patch:
+      summary: Cambiar estado de lectura
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: estado
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              estado:
+                type: string
+                enum: [pendiente, leyendo, leido]
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/libro'
+        '400':
+          description: Parámetros inválidos
+        '404':
+          description: Libro no encontrado
+components:
+  schemas:
+    libro:
+      type: object
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        autor:
+          type: string
+        genero:
+          type: string
+        anio:
+          type: integer
+        paginas:
+          type: integer
+        estado:
+          type: string
+          enum: [pendiente, leyendo, leido]
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notas:
+          type: string
+    libroCreate:
+      type: object
+      required: [titulo, autor, genero]
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 255
+        autor:
+          type: string
+          minLength: 1
+          maxLength: 255
+        genero:
+          type: string
+          maxLength: 100
+        anio:
+          type: integer
+          minimum: 0
+          maximum: 2100
+        paginas:
+          type: integer
+          minimum: 1
+        estado:
+          type: string
+          enum: [pendiente, leyendo, leido]
+          default: pendiente
+        calificacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          allow_null: true
+        notas:
+          type: string
+          maxLength: 2000
+          allow_null: true
